@@ -4,6 +4,9 @@
 <meta charset="utf-8">
 <title>Agent Console</title>
 <style>
+#host {
+	width: 256px;
+}
 #console {
 	font-family: 'Courier New', Courier, monospace;
 }
@@ -23,9 +26,15 @@
 #console .meta {
 	font-style: italic;
 }
+#command {
+	width: 256px;
+}
 #output {
 	overflow-y: scroll;
 	height: 400px;
+}
+#console .input:before {
+	content: ">>> ";
 }
 </style>
 <script>
@@ -58,16 +67,17 @@ function keydown(e) {
 	}
 }
 function entercmd(e) {
-	if (!ws) {
-		log('error', "Connect before sending commands.");
-		return;
-	}
 	let command = e.target.value;
 	e.target.value = "";
-	ws.send(command);
+	if (ws) {
+		ws.send(command);
+		log('command', command);
+	}
+	else {
+		log('error', "Connect before sending commands.");
+	}
 	history_cmds.push(command);
 	history_index = history_cmds.length;
-	log('command', command);
 }
 function prevcmd(e) {
 	let index = history_index - 1;
@@ -121,12 +131,12 @@ window.addEventListener('load', function() {
 <body>
 <h1>Agent Console</h1>
 <div>
-	<p><label>URL</label><input id="host" type="textbox" value="ws://"></p>
+	<p><label>URI: </label><input id="host" type="textbox" value="ws://"></p>
 	<p><input id="connect" type="button" value="Connect"><input id="disconnect" type="button" value="Disconnect"></p>
 </div>
 <div id="console">
 	<div id="output"></div>
-	<p><label>>>></label> <input id="command" type="textbox"></p>
+	<p class="input"><input id="command" type="textbox"></p>
 </div>
 </body>
 </html>
