@@ -3,8 +3,35 @@
 <head>
 <meta charset="utf-8">
 <title>Agent Console</title>
+<style>
+#console {
+	font-family: 'Courier New', Courier, monospace;
+}
+#console .command {
+	white-space: pre;
+}
+#console .command:before {
+	content: ">>> ";
+}
+#console .message {
+	white-space: pre;
+}
+#console .error {
+	color: red;
+	font-weight: bold;
+}
+#console .meta {
+	font-style: italic;
+}
+#output {
+	overflow-y: scroll;
+	height: 400px;
+}
+</style>
 <script>
-var ws;
+var ws = null;
+var history_cmds = [];
+var history_index = 0;
 function connect(e) {
 	let host = document.querySelector("#host");
 	if (!ws) {
@@ -19,19 +46,49 @@ function connect(e) {
 function disconnect(e) {
 	if (ws) {
 		ws.close();
+		ws = null;
 	}
 }
-function command(e) {
-	if (e.keyCode != 13) {
-		return;
+function keydown(e) {
+	switch (e.keyCode) {
+		case 13: entercmd(e); break;
+		case 27: clearcmd(e); break;
+		case 38: prevcmd(e); break;
+		case 40: nextcmd(e); break;
 	}
+}
+function entercmd(e) {
 	if (!ws) {
 		log('error', "Connect before sending commands.");
 		return;
 	}
 	let command = e.target.value;
+	e.target.value = "";
 	ws.send(command);
+	history_cmds.push(command);
+	history_index = history_cmds.length;
 	log('command', command);
+}
+function prevcmd(e) {
+	let index = history_index - 1;
+	if (index < 0) {
+		return;
+	}
+	let command = history_cmds[index];
+	e.target.value = command;
+	history_index = index;
+}
+function nextcmd(e) {
+	let index = history_index + 1;
+	if (index >= history_cmds.length) {
+		return;
+	}
+	let command = history_cmds[index];
+	e.target.value = command;
+	history_index = index;
+}
+function clearcmd(e) {
+	e.target.value = "";
 }
 function ws_open(e) {
 	log('meta', "Connected.");
@@ -51,11 +108,12 @@ function log(cls, s) {
 	p.textContent = s;
 	p.classList.add(cls);
 	output.appendChild(p);
+	output.scrollTop = output.scrollHeight;
 }
 window.addEventListener('load', function() {
 	document.querySelector("#connect").addEventListener('click', connect);
 	document.querySelector("#disconnect").addEventListener('click', disconnect);
-	document.querySelector("#command").addEventListener('keydown', command);
+	document.querySelector("#command").addEventListener('keydown', keydown);
 });
 </script>
 </head>
@@ -66,10 +124,9 @@ window.addEventListener('load', function() {
 	<p><label>URL</label><input id="host" type="textbox" value="ws://"></p>
 	<p><input id="connect" type="button" value="Connect"><input id="disconnect" type="button" value="Disconnect"></p>
 </div>
-<div>
-	<p>Console output</p>
+<div id="console">
 	<div id="output"></div>
-	<p><label>Command</label><input id="command" type="textbox"></p>
+	<p><label>>>></label> <input id="command" type="textbox"></p>
 </div>
 </body>
 </html>
