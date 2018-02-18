@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Agent Console</title>
+<script>
+var ws;
+function connect(e) {
+	let host = document.querySelector("#host");
+	if (!ws) {
+		disconnect(e);
+	}
+	ws = new WebSocket(host.value);
+	ws.onopen = ws_open;
+	ws.onclose = ws_close;
+	ws.onmessage = ws_message;
+	ws.onerror = ws_error;
+}
+function disconnect(e) {
+	if (ws) {
+		ws.close();
+	}
+}
+function command(e) {
+	if (e.keyCode != 13) {
+		return;
+	}
+	// if (!ws) {
+	// 	log('error', "Connect before sending commands.");
+	// 	return;
+	// }
+	log('command', e.target.value);
+}
+function ws_open(e) {
+	log('meta', "Connected.");
+}
+function ws_close(e) {
+	log('meta', "Closed (" + e.code + "): " + e.reason);
+}
+function ws_message(e) {
+	log('message', e.data);
+}
+function ws_error(e) {
+	log('error', "Error.");
+}
+function log(cls, s) {
+	let output = document.querySelector("#output");
+	let p = document.createElement('p');
+	p.textContent = s;
+	p.classList.add(cls);
+	output.appendChild(p);
+}
+window.addEventListener('load', function() {
+	document.querySelector("#connect").addEventListener('click', connect);
+	document.querySelector("#disconnect").addEventListener('click', disconnect);
+	document.querySelector("#command").addEventListener('keydown', command);
+});
+</script>
+</head>
+
+<body>
+<h1>Agent Console</h1>
+<div>
+	<p><label>URL</label><input id="host" type="textbox" value="ws://"></p>
+	<p><input id="connect" type="button" value="Connect"><input id="disconnect" type="button" value="Disconnect"></p>
+</div>
+<div>
+	<p>Console output</p>
+	<div id="output"></div>
+	<p><label>Command</label><input id="command" type="textbox"></p>
+</div>
+</body>
+</html>
