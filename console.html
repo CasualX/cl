@@ -25,11 +25,13 @@ function command(e) {
 	if (e.keyCode != 13) {
 		return;
 	}
-	// if (!ws) {
-	// 	log('error', "Connect before sending commands.");
-	// 	return;
-	// }
-	log('command', e.target.value);
+	if (!ws) {
+		log('error', "Connect before sending commands.");
+		return;
+	}
+	let command = e.target.value;
+	ws.send(command);
+	log('command', command);
 }
 function ws_open(e) {
 	log('meta', "Connected.");
